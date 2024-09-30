@@ -45,5 +45,5 @@ def index():
             return render_template("result.html", light=light_perc, dark=dark_perc, uploaded_image=uploaded_image_base64)
     return render_template("index.html")
 
-# if __name__ == "__main__":
-#     app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
