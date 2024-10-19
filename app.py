@@ -82,4 +82,5 @@ if __name__ == "__main__":
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
     
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run()
