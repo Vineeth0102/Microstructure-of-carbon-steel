@@ -26,6 +26,12 @@
             max-width: 100%;
             height: auto;
         }
+        .img-gallery {
+            margin-top: 20px;
+        }
+        .img-item {
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -33,12 +39,27 @@
         <div class="card shadow">
             <div class="card-body text-center">
                 <h2 class="card-title mb-4">Image Analysis Results</h2>
-                <p><strong>Ferrite Composition (Light Region) :</strong> {{ light }}%</p>
-                <p><strong>Pearlite Composition (Dark Region) :</strong> {{ dark }}%</p>
-                <h4 class="mt-4">Uploaded Image:</h4>
-                <img src="data:image/png;base64,{{ uploaded_image }}" alt="Uploaded Image" class="img-responsive mb-4">
+                
+                {% if images|length == 1 %}
+                    <!-- Single image case -->
+                    <p><strong>Light Region:</strong> {{ light }}%</p>
+                    <p><strong>Dark Region:</strong> {{ dark }}%</p>
+                {% else %}
+                    <!-- Multiple images case -->
+                    <p><strong>Average Light Region:</strong> {{ light }}%</p>
+                    <p><strong>Average Dark Region:</strong> {{ dark }}%</p>
+                {% endif %}
+
+                <h4 class="mt-4">Uploaded Images:</h4>
+                <div class="img-gallery">
+                    {% for img in images %}
+                        <div class="img-item">
+                            <img src="data:image/png;base64,{{ img }}" alt="Uploaded Image" class="img-responsive">
+                        </div>
+                    {% endfor %}
+                </div>
                 <br>
-                <a href="/" class="btn btn-custom">Upload Another Image</a>
+                <a href="/" class="btn btn-custom">Upload More Images</a>
             </div>
         </div>
     </div>

@@ -1,12 +1,14 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 from PIL import Image
 import numpy as np
 import io
 import base64
+import logging
+from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
 
-# Function to calculate the dynamic threshold and percentages
+# Function to calculate the dynamic threshold and percentages for a single image
 def calculate_light_dark_percentage(image):
     # Convert the image to grayscale
     image = image.convert('L')
@@ -37,13 +39,47 @@ def image_to_base64(image):
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        file = request.files["image"]
-        if file:
-            image = Image.open(file)
-            light_perc, dark_perc = calculate_light_dark_percentage(image)
-            uploaded_image_base64 = image_to_base64(image)  # Convert the image to base64 for display
-            return render_template("result.html", light=light_perc, dark=dark_perc, uploaded_image=uploaded_image_base64)
+        files = request.files.getlist("images")  # Get all uploaded images
+        if files:
+            logger.info(f"{len(files)} image(s) uploaded.")
+            light_percentages = []
+            dark_percentages = []
+            images_base64 = []
+            
+            # Process each image
+            for idx, file in enumerate(files):
+                try:
+                    image = Image.open(file)
+                    light_perc, dark_perc = calculate_light_dark_percentage(image)
+                    light_percentages.append(light_perc)
+                    dark_percentages.append(dark_perc)
+                    images_base64.append(image_to_base64(image))
+                    logger.info(f"Processed image {idx + 1}: Light={light_perc}%, Dark={dark_perc}%")
+                except Exception as e:
+                    logger.error(f"Error processing image {idx + 1}: {e}")
+    
+            # Calculate average light and dark percentages
+            avg_light_perc = round(sum(light_percentages) / len(light_percentages), 2)
+            avg_dark_perc = round(sum(dark_percentages) / len(dark_percentages), 2)
+            logger.info(f"Average Light={avg_light_perc}%, Average Dark={avg_dark_perc}%")
+            
+            return render_template("result.html", 
+                                   light=avg_light_perc, 
+                                   dark=avg_dark_perc, 
+                                   images=images_base64)
+        else:
+            logger.warning("No images were uploaded.")
+    else:
+        logger.info("Rendering upload page.")
     return render_template("index.html")
 
 if __name__ == "__main__":
+    # Set up logging
+    handler = RotatingFileHandler('app.log', maxBytes=100000, backupCount=3)
+    handler.setLevel(logging.INFO)
+    
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    
     app.run(debug=True)
